@@ -2,6 +2,7 @@ import cv2
 import os
 import sys
 import json
+import numpy as np
 import tkinter as tk
 import argparse
 
@@ -16,10 +17,47 @@ def get_annotation(path):
 
 
 def annotate_image(img, annot):
-    for ids, coords in annot.items():
-        color = list(np.random.random(size=3) * 256)
-        cv2.rectangle(img, (coords[0], coords[1]),
-                      (coords[2], coords[3]), color, 2)
+    for idx in annot:
+        # color = list(np.random.random(size=3) * 256)
+        coords = annot[idx]
+        x1 = coords[0]
+        y1 = coords[1]
+        x2 = coords[2]
+        y2 = coords[3]
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0,0,255), 2)
+        cv2.putText(img, idx, (x1, y1-10), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255))
+    return img
+
+
+def start_annotator(imgs_path, anot_path, img_count, ant_count):
+    cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("image", 1920, 1080)
+    idx = 0
+    imfiles = sorted(os.listdir(imgs_path), key=lambda x: int(x.split('.')[0]))
+    while idx < img_count:
+        imfile = imfiles[idx]
+        if not imfile.endswith(".png"):
+            sys.exit(1)
+
+        img = cv2.imread(os.path.join(imgs_path, imfile))
+        anfile = imfile.split(".")[0] + ".json"
+        anot = get_annotation(os.path.join(anot_path, anfile))
+        annotated_image = annotate_image(img.copy(), anot)
+        cv2.putText(annotated_image, imfile, (0, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1, (255, 255, 255), 2)
+        cv2.imshow("image", annotated_image)
+        print(anot)
+        print(imfile)
+        key = cv2.waitKey()
+        if key == ord('q') or key == ord('Q'):
+            break
+        elif key == ord('r') or key == ord('R'):
+            continue
+        elif (key == ord('n') or key == ord('N')) and idx < img_count:
+            idx += 1
+        elif (key == ord('p') or key == ord('P')) and idx > 0:
+            idx -= 1
+    cv2.destroyAllWindows()
 
 
 def main():
@@ -42,28 +80,9 @@ def main():
     ant_count = len(os.listdir(anot_path))
     assert img_count != anot_path, f"[!] Error: Number if images ({img_count}) does not match number of annotation files ({ant_count})."
 
-    cv2.namedWindow("image", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("image", 1920, 1080)
-    for imfile in sorted(os.listdir(imgs_path), key=lambda x: int(x.split('.')[0])):
-        if not imfile.endswith(".png"):
-            sys.exit(1)
-        img = cv2.imread(os.path.join(imgs_path, imfile))
-        anfile = imfile.split(".")[0] + ".json"
-        anot = get_annotation(os.path.join(anot_path, anfile))
-        annotated_image = annotate_image(img.copy(), anot)
-        cv2.imshow("image", annotated_image)
-        print(imfile)
-        key = cv2.waitKey()
-        if key == ord(" "):
-            break
-    cv2.destroyAllWindows()
+    color_dict = {}
+    start_annotator(imgs_path, anot_path, img_count, ant_count)
 
 
 if __name__ == "__main__":
     main()
-
-
-# cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-# cv2.imshow('image',img)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
