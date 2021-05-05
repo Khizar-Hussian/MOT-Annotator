@@ -1,10 +1,11 @@
-import cv2
-import os
-import sys
-import json
-import numpy as np
-import tkinter as tk
 import argparse
+import json
+import os
+import subprocess
+import sys
+
+import cv2
+import numpy as np
 
 
 def get_annotation(path):
@@ -27,7 +28,8 @@ def annotate_image(img, annot, color_dict):
         x2 = coords[2]
         y2 = coords[3]
         cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(img, idx, (x1, y1-10), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255))
+        cv2.putText(img, idx, (x1, y1-10),
+                    cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255))
     return img
 
 
@@ -48,8 +50,8 @@ def start_annotator(imgs_path, anot_path, img_count, ant_count, color_dict):
         cv2.putText(annotated_image, imfile, (0, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     1, (255, 255, 255), 2)
         cv2.imshow("image", annotated_image)
-        print(anot)
-        print(imfile)
+        # print(anot)
+        # print(imfile)
         key = cv2.waitKey()
         if key == ord('q') or key == ord('Q'):
             break
@@ -59,6 +61,8 @@ def start_annotator(imgs_path, anot_path, img_count, ant_count, color_dict):
             idx += 1
         elif (key == ord('p') or key == ord('P')) and idx > 0:
             idx -= 1
+        elif key == ord('e') or key == ord('E'):
+            subprocess.Popen(["notepad.exe", f"{os.path.join(anot_path, anfile)}"])
     cv2.destroyAllWindows()
 
 
