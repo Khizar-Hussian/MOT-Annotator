@@ -16,20 +16,22 @@ def get_annotation(path):
     return data
 
 
-def annotate_image(img, annot):
+def annotate_image(img, annot, color_dict):
     for idx in annot:
-        # color = list(np.random.random(size=3) * 256)
+        if idx not in color_dict:
+            color_dict[idx] = list(np.random.random(size=3) * 256)
+        color = color_dict[idx]
         coords = annot[idx]
         x1 = coords[0]
         y1 = coords[1]
         x2 = coords[2]
         y2 = coords[3]
-        cv2.rectangle(img, (x1, y1), (x2, y2), (0,0,255), 2)
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
         cv2.putText(img, idx, (x1, y1-10), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 255, 255))
     return img
 
 
-def start_annotator(imgs_path, anot_path, img_count, ant_count):
+def start_annotator(imgs_path, anot_path, img_count, ant_count, color_dict):
     cv2.namedWindow("image", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("image", 1920, 1080)
     idx = 0
@@ -42,7 +44,7 @@ def start_annotator(imgs_path, anot_path, img_count, ant_count):
         img = cv2.imread(os.path.join(imgs_path, imfile))
         anfile = imfile.split(".")[0] + ".json"
         anot = get_annotation(os.path.join(anot_path, anfile))
-        annotated_image = annotate_image(img.copy(), anot)
+        annotated_image = annotate_image(img.copy(), anot, color_dict)
         cv2.putText(annotated_image, imfile, (0, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     1, (255, 255, 255), 2)
         cv2.imshow("image", annotated_image)
@@ -81,7 +83,7 @@ def main():
     assert img_count != anot_path, f"[!] Error: Number if images ({img_count}) does not match number of annotation files ({ant_count})."
 
     color_dict = {}
-    start_annotator(imgs_path, anot_path, img_count, ant_count)
+    start_annotator(imgs_path, anot_path, img_count, ant_count, color_dict)
 
 
 if __name__ == "__main__":
